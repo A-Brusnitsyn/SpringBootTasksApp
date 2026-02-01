@@ -10,9 +10,9 @@ import java.sql.SQLException;
 
 public class DatabaseConnection {
 
-    private static final String URL = "jdbc:postgresql://localhost:5432/taskdb";
-    private static final String USER = "your_username";
-    private static final String PASSWORD = "your_password";
+    private static final String URL = "jdbc:postgresql://localhost:5432/springtest";
+    private static final String USER = "Alexandr";
+    private static final String PASSWORD = "root";
 
     // Получить соединение с БД
     public static Connection getConnection() throws SQLException {
