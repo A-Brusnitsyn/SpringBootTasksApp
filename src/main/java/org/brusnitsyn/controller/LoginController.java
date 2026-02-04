@@ -1,25 +1,27 @@
 package org.brusnitsyn.controller;
 
 import jakarta.servlet.http.HttpSession;
-import org.brusnitsyn.db.DatabaseConnection;
-import org.brusnitsyn.model.User;
+import org.brusnitsyn.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 public class LoginController {
 
+    private final UserService userService;
 
-    // Показать страницу логина
+    @Autowired
+    public LoginController(UserService userService) {
+        this.userService = userService;
+    }
+
     @GetMapping("/login")
     public String showLoginPage() {
         return "login";
     }
 
-    // Обработать логин
     @PostMapping("/login")
     public String login(
             @RequestParam String username,
@@ -27,31 +29,26 @@ public class LoginController {
             HttpSession session,
             Model model) {
 
-        // Находим пользователя в БД
-        User user = DatabaseConnection.findUserByUsername(username);
+        // Используем сервис вместо репозитория
+        boolean isAuthenticated = userService.checkAuthentication(username, password);
 
-        // Проверяем пароль
-        if (user != null && user.getPassword().equals(password)) {
-            // Успешный логин
+        if (isAuthenticated) {
+            var user = userService.getUserByUsername(username);
             session.setAttribute("user", user);
             session.setAttribute("username", user.getUsername());
             session.setAttribute("userId", user.getId());
-
-            return "redirect:/tasks"; // Перенаправляем на страницу задач
+            return "tasks";
         } else {
-            // Ошибка
             model.addAttribute("error", "Неверный логин или пароль");
             return "login";
         }
     }
 
-    // Показать страницу регистрации
     @GetMapping("/register")
     public String showRegisterPage() {
         return "register";
     }
 
-    // Обработать регистрацию
     @PostMapping("/register")
     public String register(
             @RequestParam String username,
@@ -60,33 +57,26 @@ public class LoginController {
             @RequestParam String confirmPassword,
             Model model) {
 
-        // Простые проверки
-        if (!password.equals(confirmPassword)) {
-            model.addAttribute("error", "Пароли не совпадают");
-            return "register";
-        }
+        // Переносим базовые проверки в сервис
+        try {
+            boolean created = userService.registerUser(username, password, email, confirmPassword);
 
-        if (DatabaseConnection.userExists(username)) {
-            model.addAttribute("error", "Пользователь уже существует");
-            return "register";
-        }
-
-        // Создаём пользователя
-        boolean created = DatabaseConnection.createUser(username, password, email);
-
-        if (created) {
-            model.addAttribute("success", "Регистрация успешна! Теперь войдите.");
-            return "login";
-        } else {
-            model.addAttribute("error", "Ошибка регистрации");
+            if (created) {
+                model.addAttribute("success", "Регистрация успешна! Теперь войдите.");
+                return "login";
+            } else {
+                model.addAttribute("error", "Ошибка регистрации");
+                return "register";
+            }
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("error", e.getMessage());
             return "register";
         }
     }
 
-    // Выйти из системы
     @GetMapping("/logout")
     public String logout(HttpSession session) {
-        session.invalidate(); // Уничтожаем сессию
-        return "redirect:/login";
+        session.invalidate();
+        return "login";
     }
 }
