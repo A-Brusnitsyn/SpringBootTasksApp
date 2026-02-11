@@ -5,6 +5,8 @@ import org.brusnitsyn.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 public class UserService {
 
@@ -18,26 +20,21 @@ public class UserService {
     /**
      * Регистрация пользователя с валидацией
      */
-    public boolean registerUser(String username, String password, String email, String confirmPassword) {
-        // Валидация
-        if (!password.equals(confirmPassword)) {
-            throw new IllegalArgumentException("Пароли не совпадают");
-        }
-
+    public User registerUser(String username, String password, String email) throws Exception {
+        // Проверка существования пользователя
         if (userRepository.existsByUsername(username)) {
-            throw new IllegalArgumentException("Пользователь уже существует");
+            throw new Exception("Пользователь с таким именем уже существует");
         }
 
-        if (email == null || !email.contains("@")) {
-            throw new IllegalArgumentException("Некорректный email");
-        }
+        // Создание пользователя
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(password);
+        user.setEmail(email);
+        user.setCreatedAt(LocalDateTime.now());
 
-        User newUser = new User();
-        newUser.setUsername(username);
-        newUser.setPassword(password);
-        newUser.setEmail(email);
-
-        return userRepository.save(newUser);
+        userRepository.save(user);
+        return user;
     }
 
     /**

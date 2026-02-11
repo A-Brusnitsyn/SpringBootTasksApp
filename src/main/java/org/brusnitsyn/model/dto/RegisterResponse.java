@@ -3,12 +3,27 @@ package org.brusnitsyn.model.dto;
 public class RegisterResponse {
     private boolean success;
     private String message;
+    private Long userId;
+    private String username;
 
-    public RegisterResponse() {}
+    public RegisterResponse(boolean success, String errorMessage) {
+    }
 
-    public RegisterResponse(boolean success, String message) {
+    // Статические фабричные методы
+    public static RegisterResponse success(String message, Long userId, String username) {
+        return new RegisterResponse(true, message, userId, username);
+    }
+    
+
+    public static RegisterResponse error(String message) {
+        return new RegisterResponse(false, message, null, null);
+    }
+
+    public RegisterResponse(boolean success, String message, Long userId, String username) {
         this.success = success;
         this.message = message;
+        this.userId = userId;
+        this.username = username;
     }
 
     public boolean isSuccess() { return success; }

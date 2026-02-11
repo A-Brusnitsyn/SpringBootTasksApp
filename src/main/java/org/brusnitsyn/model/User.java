@@ -1,5 +1,7 @@
 package org.brusnitsyn.model;
 
+import java.time.LocalDateTime;
+
 public class User {
     private Long id;
     private String username;
@@ -18,4 +20,7 @@ public class User {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public void setCreatedAt(LocalDateTime now) {
+    }
 }
